@@ -3,6 +3,9 @@
 
 #include "util.h"
 #include "array.h"
+#include <pthread.h>
+#include <semaphore.h>   
+
 
 
 #define ARRAY_SIZE: 8
@@ -12,6 +15,11 @@
 #define MAX_NAME_LENGTH //TODO from PA4
 #define MAX_IP_LENGTH: INET6_ADDRSTRLEN
 
+struct data {
+    char *fileName;
+    char *fileDNS;
+};
 
 
-#endif
+
+#endif 
