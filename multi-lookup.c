@@ -62,7 +62,7 @@ void *resThread(void *arg){
     data *q = (data*)arg;
     char **address = &q->serviceFile;
     
-    char *ip = NULL;
+    char ip[MAX_IP_LENGTH];
 
     while(q->counter != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
 
@@ -94,83 +94,76 @@ void array_freeAgain(data *q) {
 int main(int argc, char *argv[]) {
 
     //imma use the max screw the user
-
-    char *IP = NULL;
-    dnslookup(argv[1], IP, 100);
-    fprintf(stdout, "IP address: %s\n", IP);
     
-    // int reqNum = MAX_REQUESTER_THREADS;
-    // int resNum = MAX_RESOLVER_THREADS;
-    // int fileNum = argc - 5;
-    // char *reqFile = argv[3];
-    // char *resFile = argv[4];
+    int reqNum = MAX_REQUESTER_THREADS;
+    int resNum = MAX_RESOLVER_THREADS;
+    int fileNum = argc - 5;
+    char *reqFile = argv[3];
+    char *resFile = argv[4];
     
-    // FILE *test;
+    FILE *test;
 
-    // test = fopen(reqFile, "w");
-    // if(test == NULL){
-    //     fprintf(stderr, "Requester file failed to open\n");
-    // }
-    // fclose(test);
+    test = fopen(reqFile, "w");
+    if(test == NULL){
+        fprintf(stderr, "Requester file failed to open\n");
+    }
+    fclose(test);
 
-    // test = fopen(resFile, "w");
-    // if(test == NULL){
-    //     fprintf(stderr, "Resolver file failed to open\n");
-    // }
-    // fclose(test);
+    test = fopen(resFile, "w");
+    if(test == NULL){
+        fprintf(stderr, "Resolver file failed to open\n");
+    }
+    fclose(test);
 
 
-    // data allData;
-    // array sharedArray;
+    data allData;
+    array sharedArray;
 
-    // data *q = &allData;
+    data *q = &allData;
     
     
     
-    // array_initAgain(q);
-    // q->sharedptr = &sharedArray;
-    // q->fileAmount = fileNum;
-    // q->serviceFile = reqFile;
-    // q->resolverFile = resFile;
-    // array_init(q->sharedptr);
+    array_initAgain(q);
+    q->sharedptr = &sharedArray;
+    q->fileAmount = fileNum;
+    q->serviceFile = reqFile;
+    q->resolverFile = resFile;
+    array_init(q->sharedptr);
 
-    // q->counter = (int *)malloc(sizeof(int));
-    // if(q->counter == NULL){
-    //     fprintf(stderr, "malloc failed");
-    // }
-    // q->counter = (int*)10;
+    q->counter = (int *)malloc(sizeof(int));
+    if(q->counter == NULL){
+        fprintf(stderr, "malloc failed");
+    }
+    q->counter = (int*)10;
     
-    // fprintf(stdout, "test1\n");
-    // for (int i = 0; i < fileNum - 1; i++) {
-    //     strcpy(q->fileName[i], argv[i + 5]);
-    // }
-    // fprintf(stdout, "test2\n");
-    // pthread_t reqThreads[reqNum];
+    for (int i = 0; i < fileNum - 1; i++) {
+        strcpy(q->fileName[i], argv[i + 5]);
+    }
+    pthread_t reqThreads[reqNum];
 
-    // for(int i = 0; i < reqNum; i++) {
-    //     q->threadID = i;
-    //     pthread_create(&reqThreads[i], NULL, reqThread, q);
-    // }
-    // fprintf(stdout, "test3\n");
-    // pthread_t resThreads[resNum];
+    for(int i = 0; i < reqNum; i++) {
+        q->threadID = i;
+        pthread_create(&reqThreads[i], NULL, reqThread, q);
+    }
+    pthread_t resThreads[resNum];
 
-    // for(int i = 0; i < resNum; i++) {
-    //     q->threadID = i;
-    //     pthread_create(&resThreads[i], NULL, resThread, q);
-    // }
+    for(int i = 0; i < resNum; i++) {
+        q->threadID = i;
+        pthread_create(&resThreads[i], NULL, resThread, q);
+    }
 
-    // for(int i = 0; i < reqNum; i++) {
-    //     pthread_join(reqThreads[i], NULL);
-    // }
+    for(int i = 0; i < reqNum; i++) {
+        pthread_join(reqThreads[i], NULL);
+    }
 
-    // for(int i = 0; i < reqNum; i++) {
-    //     pthread_join(resThreads[i], NULL);
-    // } 
+    for(int i = 0; i < reqNum; i++) {
+        pthread_join(resThreads[i], NULL);
+    } 
 
-    // free(q->counter);
-    // array_free(q->sharedptr);
-    // array_freeAgain(q);
-    // return 0;
+    free(q->counter);
+    array_free(q->sharedptr);
+    array_freeAgain(q);
+    return 0;
 
 }
 
