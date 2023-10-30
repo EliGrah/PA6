@@ -60,12 +60,14 @@ void *reqThread(void *arg) {
 void *resThread(void *arg){
 
     data *q = (data*)arg;
-    char *address;
+    char **address = &q->serviceFile;
+    
     char *ip = NULL;
 
     while(q->counter != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
-        array_get(q->sharedptr, &address);
-        dnslookup(address, ip, MAX_IP_LENGTH);
+
+        array_get(q->sharedptr, address);
+        dnslookup(q->serviceFile, ip, MAX_IP_LENGTH);
 
         pthread_mutex_lock(&q->resMutex);
 
@@ -134,25 +136,24 @@ int main(int argc, char *argv[]) {
     }
     q->counter = (int*)10;
     
-
+    fprintf(stdout, "test1\n");
     for (int i = 0; i < fileNum - 1; i++) {
         strcpy(q->fileName[i], argv[i + 5]);
     }
-    
+    fprintf(stdout, "test2\n");
     pthread_t reqThreads[reqNum];
 
     for(int i = 0; i < reqNum; i++) {
         q->threadID = i;
         pthread_create(&reqThreads[i], NULL, reqThread, q);
     }
-
+    fprintf(stdout, "test3\n");
     pthread_t resThreads[resNum];
 
     for(int i = 0; i < resNum; i++) {
         q->threadID = i;
         pthread_create(&resThreads[i], NULL, resThread, q);
     }
-
 
     for(int i = 0; i < reqNum; i++) {
         pthread_join(reqThreads[i], NULL);
