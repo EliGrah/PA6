@@ -58,12 +58,27 @@ void *reqThread(void *arg) {
 }
 
 void *resThread(void *arg){
+
+    data *q = (data*)arg;
     char *address[MAX_ADDRESS_LENGTH];
     char *ip[MAX_IP_LENGTH];
 
-    int array_get(array* sharedArray, char** address);
+    while(q->counter != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
+        array_get(q->sharedptr, address);
+        dnslookup(address, ip, MAX_IP_LENGTH);
 
+        pthread_mutex_lock(&q->resMutex);
 
+        FILE *sp = fopen(q->resolverFile, "a");
+        if (sp == NULL) {
+            fprintf(stderr, "failed to open service file\n");             
+        }
+        fprintf(sp, "%s", ip);
+        fclose(sp);
+
+        pthread_mutex_unlock(&q->resMutex);
+    }
+    pthread_exit(NULL);
 }
 
 
@@ -150,7 +165,7 @@ int main(int argc, char *argv[]) {
     free(q->counter);
     array_free(q->sharedptr);
     array_freeAgain(q);
-    
+    return 0;
 
 }
 
