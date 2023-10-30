@@ -60,11 +60,11 @@ void *reqThread(void *arg) {
 void *resThread(void *arg){
 
     data *q = (data*)arg;
-    char *address[MAX_ADDRESS_LENGTH];
-    char *ip[MAX_IP_LENGTH];
+    char *address;
+    char *ip = NULL;
 
     while(q->counter != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
-        array_get(q->sharedptr, address);
+        array_get(q->sharedptr, &address);
         dnslookup(address, ip, MAX_IP_LENGTH);
 
         pthread_mutex_lock(&q->resMutex);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     if(q->counter == NULL){
         fprintf(stderr, "malloc failed");
     }
-    q->counter = 10;
+    q->counter = (int*)10;
     
 
     for (int i = 0; i < fileNum - 1; i++) {
