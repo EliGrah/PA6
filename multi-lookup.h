@@ -15,6 +15,7 @@
 typedef struct data {
     
     int fileAmount;
+    int threadAmount;
     char *serviceFile;
     char fileName[MAX_INPUT_FILES][MAX_NAME_LENGTH];
     pthread_mutex_t reqMutex;

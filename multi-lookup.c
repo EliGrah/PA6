@@ -6,6 +6,7 @@
 int array_initAgain(data *q) {
     pthread_mutex_init(&q->reqMutex, NULL);
     q->fileAmount = 0;
+    q->threadAmount = 0;
     q->serviceFile = NULL;
     q->sharedptr = NULL;
     q->countptr = NULL;
@@ -22,13 +23,18 @@ void *reqThread(void *arg) {
     indivThreadData *thread = (indivThreadData*)arg;
     int threadID = thread->threadId;
     char address[MAX_ADDRESS_LENGTH];
-    for(int i = 0; (threadID + i) < thread->q->fileAmount; i = i + 10){
-        FILE *fp = fopen(thread->q->fileName[threadID + i], "r");
+    int numLooked = 0;
+    int reqNum = thread->q->threadAmount;
 
+    pthread_t actualID = pthread_self();
+    for(int i = 0; (threadID + i) < thread->q->fileAmount; i = i + reqNum){
+        FILE *fp = fopen(thread->q->fileName[threadID + i], "r");
+        numLooked++;
         if(fp == NULL) {
             fprintf(stderr, "invalid file %s\n", thread->q->fileName[threadID + i]); 
         } else {
             while(fgets(address, MAX_ADDRESS_LENGTH, fp) != NULL) {
+            
                 array_put(thread->q->sharedptr, address);
 
                 pthread_mutex_lock(&thread->q->reqMutex);
@@ -48,6 +54,9 @@ void *reqThread(void *arg) {
     pthread_mutex_lock(&thread->q->reqMutex);
     thread->q->countptr--;
     pthread_mutex_unlock(&thread->q->reqMutex);
+    if(numLooked > 0) {
+        fprintf(stdout, "thread %p serviced %d files\n", actualID, numLooked);
+    }
     pthread_exit(NULL);
 }
 
@@ -56,25 +65,35 @@ void *resThread(void *arg){
     data *q = (data*)arg;
     char *serverName = (char *)malloc(MAX_NAME_LENGTH);
     char ip[MAX_IP_LENGTH];
+    int serviced = 0;
+    int check = 0;
+    pthread_t actualID = pthread_self();
     
     while(q->countptr != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
         
         array_get(q->sharedptr, serverName);
 
-        dnslookup(serverName, ip, MAX_IP_LENGTH);
-
+        check = dnslookup(serverName, ip, MAX_IP_LENGTH);
+        if(check != 0){
+            strcpy(ip, "NOT_RESOLVED");
+            serviced--;
+        }
+        serviced++;
         pthread_mutex_lock(&q->resMutex);
 
         FILE *sp = fopen(q->resolverFile, "a");
         if (sp == NULL) {
             fprintf(stderr, "failed to open service file\n");              
         }
-        fprintf(sp, "%s\n", ip);
+        fprintf(sp, "%s, %s\n", serverName, ip);
         fclose(sp);
 
         pthread_mutex_unlock(&q->resMutex);
     }
     free(serverName);
+    if(serviced > 0) {
+        fprintf(stdout, "thread %p resolved %d hosts\n", actualID, serviced);
+    }
     pthread_exit(NULL);
 }
 
@@ -99,8 +118,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    int reqNum = MAX_REQUESTER_THREADS;
-    int resNum = MAX_RESOLVER_THREADS;
+    int reqNum = atoi(argv[1]);
+    int resNum = atoi(argv[2]);
+    printf("req: %d and res: %d\n", reqNum, resNum);
     int fileNum = argc - 5;
     char *reqFile = argv[3];
     char *resFile = argv[4];
@@ -136,6 +156,7 @@ int main(int argc, char *argv[]) {
     q->serviceFile = reqFile;
     q->resolverFile = resFile;
     q->countptr = &counter[0];
+    q->threadAmount = reqNum;
     array_init(q->sharedptr);
 
     
