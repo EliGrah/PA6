@@ -22,20 +22,16 @@ void *reqThread(void *arg) {
     indivThreadData *thread = (indivThreadData*)arg;
     int threadID = thread->threadId;
     char address[MAX_ADDRESS_LENGTH];
-
     for(int i = 0; (threadID + i) < thread->q->fileAmount; i = i + 10){
-
         FILE *fp = fopen(thread->q->fileName[threadID + i], "r");
 
         if(fp == NULL) {
             fprintf(stderr, "invalid file %s\n", thread->q->fileName[threadID + i]); 
         } else {
-        
             while(fgets(address, MAX_ADDRESS_LENGTH, fp) != NULL) {
                 array_put(thread->q->sharedptr, address);
 
                 pthread_mutex_lock(&thread->q->reqMutex);
-
                 FILE *sp = fopen(thread->q->serviceFile, "a");
                 if (sp == NULL) {
                 }
@@ -52,8 +48,6 @@ void *reqThread(void *arg) {
     pthread_mutex_lock(&thread->q->reqMutex);
     thread->q->countptr--;
     pthread_mutex_unlock(&thread->q->reqMutex);
-    fprintf(stdout, "Requester thread %d is done\n", threadID);
-
     pthread_exit(NULL);
 }
 
@@ -107,7 +101,7 @@ int main(int argc, char *argv[]) {
     
     int reqNum = MAX_REQUESTER_THREADS;
     int resNum = MAX_RESOLVER_THREADS;
-    int fileNum = argc - 7;
+    int fileNum = argc - 5;
     char *reqFile = argv[3];
     char *resFile = argv[4];
     int counter[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
@@ -145,9 +139,10 @@ int main(int argc, char *argv[]) {
     array_init(q->sharedptr);
 
     
-    for (int i = 0; i < fileNum - 1; i++) {
+    for (int i = 0; i < fileNum; i++) {
         strcpy(q->fileName[i], argv[i + 5]);
-    }
+    }   
+
 
 
     pthread_t reqThreads[reqNum];
