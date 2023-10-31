@@ -37,12 +37,12 @@ int array_put (array *s, char *hostname) {
 }
 
 int array_get (array *s, char *hostname) {
+    remove_newLine(s->serverNames[s->back % ARRAY_SIZE]);
+    
     pthread_mutex_lock(&s->mutex);
     while((s->front - s->back) == 0) {
         pthread_cond_wait(&s->notEmpty, &s->mutex);
     }
-
-    remove_newLine(s->serverNames[s->back % ARRAY_SIZE]);
 
     strcpy(hostname, s->serverNames[s->back % ARRAY_SIZE]);
 

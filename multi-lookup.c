@@ -37,23 +37,21 @@ void *reqThread(void *arg) {
             
                 array_put(thread->q->sharedptr, address);
 
-                pthread_mutex_lock(&thread->q->reqMutex);
                 FILE *sp = fopen(thread->q->serviceFile, "a");
-                if (sp == NULL) {
+                pthread_mutex_lock(&thread->q->reqMutex);
+                if (sp == NULL) { 
+                    fprintf(stderr, "failed to open service file\n");  
                 }
                 fprintf(sp, "%s", address);
-                fclose(sp);
-
                 pthread_mutex_unlock(&thread->q->reqMutex);
+                fclose(sp);
             }
         }
 
         fclose(fp);
     }
 
-    pthread_mutex_lock(&thread->q->reqMutex);
-    thread->q->countptr--;
-    pthread_mutex_unlock(&thread->q->reqMutex);
+    thread->q->threadAmount--;
     if(numLooked > 0) {
         fprintf(stdout, "thread %p serviced %d files\n", actualID, numLooked);
     }
@@ -69,7 +67,7 @@ void *resThread(void *arg){
     int check = 0;
     pthread_t actualID = pthread_self();
     
-    while(q->countptr != 0 && (q->sharedptr->front - q->sharedptr->back) != 0){
+    while(q->threadAmount != 0 || (q->sharedptr->front - q->sharedptr->back) != 0){
         
         array_get(q->sharedptr, serverName);
 
@@ -79,16 +77,14 @@ void *resThread(void *arg){
             serviced--;
         }
         serviced++;
-        pthread_mutex_lock(&q->resMutex);
-
         FILE *sp = fopen(q->resolverFile, "a");
+        pthread_mutex_lock(&q->resMutex);
         if (sp == NULL) {
             fprintf(stderr, "failed to open service file\n");              
         }
         fprintf(sp, "%s, %s\n", serverName, ip);
-        fclose(sp);
-
         pthread_mutex_unlock(&q->resMutex);
+        fclose(sp);
     }
     free(serverName);
     if(serviced > 0) {
@@ -120,11 +116,9 @@ int main(int argc, char *argv[]) {
     
     int reqNum = atoi(argv[1]);
     int resNum = atoi(argv[2]);
-    printf("req: %d and res: %d\n", reqNum, resNum);
     int fileNum = argc - 5;
     char *reqFile = argv[3];
     char *resFile = argv[4];
-    int counter[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
     if(fileNum > MAX_ADDRESS_LENGTH) {
         fprintf(stderr, "error: too many files");
@@ -155,7 +149,6 @@ int main(int argc, char *argv[]) {
     q->fileAmount = fileNum;
     q->serviceFile = reqFile;
     q->resolverFile = resFile;
-    q->countptr = &counter[0];
     q->threadAmount = reqNum;
     array_init(q->sharedptr);
 
