@@ -15,7 +15,6 @@
 typedef struct data {
     
     int fileAmount;
-    int threadID;
     char *serviceFile;
     char fileName[MAX_INPUT_FILES][MAX_NAME_LENGTH];
     pthread_mutex_t reqMutex;
@@ -32,9 +31,10 @@ typedef struct data {
 
 } data;
 
-typedef struct signaler {
-    pthread_cond_t isDone;
-} signaler;
+typedef struct indivThreadData {
+    int threadId;
+    struct data *q;
+} indivThreadData;
 
 
 
