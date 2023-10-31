@@ -13,29 +13,30 @@
 #define MAX_ADDRESS_LENGTH 50
 
 typedef struct data {
-    
     int fileAmount;
-    int threadAmount;
     char *serviceFile;
     char fileName[MAX_INPUT_FILES][MAX_NAME_LENGTH];
     pthread_mutex_t reqMutex;
-
     struct array *sharedptr;
 
-
-    char *resolverFile;
-    pthread_mutex_t resMutex;
-    pthread_t resThreads[MAX_RESOLVER_THREADS];
-
-    int *countptr;
-
-
 } data;
+
+typedef struct newData {
+    pthread_mutex_t resMutex;
+    char *resolverFile;
+} newData;
 
 typedef struct indivThreadData {
     int threadId;
     struct data *q;
+    struct newData *p;
+    struct counter *c;
+    struct array *sharedptr;
 } indivThreadData;
+
+typedef struct counter {
+    int counter;
+}counter;
 
 
 
