@@ -1,5 +1,13 @@
 #include "array.h"
 
+void remove_newLine(char *string) {
+    int strLength = strlen(string);
+
+    if(string[strLength - 1] == '\n') {
+        string[strLength - 1] = '\0';
+    }
+}
+
 int array_init(array *s) {
 
     s->front = 0;
@@ -28,14 +36,16 @@ int array_put (array *s, char *hostname) {
     return 0;
 }
 
-int array_get (array *s, char **hostname) {
+int array_get (array *s, char *hostname) {
     pthread_mutex_lock(&s->mutex);
-
     while((s->front - s->back) == 0) {
         pthread_cond_wait(&s->notEmpty, &s->mutex);
     }
 
-    strcpy(*hostname, s->serverNames[s->back % ARRAY_SIZE]);
+    remove_newLine(s->serverNames[s->back % ARRAY_SIZE]);
+
+    strcpy(hostname, s->serverNames[s->back % ARRAY_SIZE]);
+
     s->back++;
 
     pthread_cond_signal(&s->notFull);

@@ -21,14 +21,13 @@ typedef struct data {
     pthread_mutex_t reqMutex;
 
     struct array *sharedptr;
-    
-    char *serverName;
-    char *serverDNS;
+
+
     char *resolverFile;
     pthread_mutex_t resMutex;
     pthread_t resThreads[MAX_RESOLVER_THREADS];
 
-    int *counter;
+    int *countptr;
 
 
 } data;

@@ -22,6 +22,6 @@ typedef struct array {
 
 int array_put(array*, char*);
 int array_init(array*);
-int array_get(array*, char**);
+int array_get(array*, char*);
 void array_free(array*);
 #endif
